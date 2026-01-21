@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./rust_version -> target"
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build Rust version
+        run: |
+          cd rust_version
+          cargo build --release
+
+      - name: Create release archives
+        shell: bash
+        run: |
+          cd rust_version
+          mkdir -p releases
+          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
+            7z a releases/termos-windows-x64.zip ./target/release/termos-rust.exe
+          elif [ "${{ matrix.platform }}" == "macos-latest" ]; then
+            tar -czf releases/termos-macos-x64.tar.gz -C ./target/release termos-rust
+          else
+            tar -czf releases/termos-linux-x64.tar.gz -C ./target/release termos-rust
+          fi
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: rust_version/releases/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: termos-${{ matrix.platform }}
+          path: rust_version/releases/*
