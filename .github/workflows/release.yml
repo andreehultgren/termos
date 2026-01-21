@@ -35,6 +35,7 @@ jobs:
       - name: Build Rust version
         run: |
           cd rust_version
+          mkdir -p dist
           cargo build --release
 
       - name: Create release archives
