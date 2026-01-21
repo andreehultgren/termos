@@ -42,12 +42,19 @@ jobs:
         run: |
           cd rust_version
           mkdir -p releases
+          ls -la target/release/
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            7z a releases/termos-windows-x64.zip ./target/release/termos-rust.exe
+            if [ -f "target/release/termos-rust.exe" ]; then
+              7z a releases/termos-windows-x64.zip target/release/termos-rust.exe
+            fi
           elif [ "${{ matrix.platform }}" == "macos-latest" ]; then
-            tar -czf releases/termos-macos-x64.tar.gz -C ./target/release termos-rust
+            if [ -f "target/release/termos-rust" ]; then
+              tar -czf releases/termos-macos-x64.tar.gz -C target/release termos-rust
+            fi
           else
-            tar -czf releases/termos-linux-x64.tar.gz -C ./target/release termos-rust
+            if [ -f "target/release/termos-rust" ]; then
+              tar -czf releases/termos-linux-x64.tar.gz -C target/release termos-rust
+            fi
           fi
 
       - name: Upload Release Assets
