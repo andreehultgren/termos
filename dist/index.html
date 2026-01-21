@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Termos</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Sidebar -->
+      <div id="sidebar">
+        <div id="sidebar-header">
+          <h2>Commands</h2>
+          <button id="add-btn" class="add-button">+ Add</button>
+        </div>
+        <div id="button-list"></div>
+      </div>
+
+      <!-- Resizable divider -->
+      <div id="divider"></div>
+
+      <!-- Terminal -->
+      <div id="terminal-container">
+        <div id="terminal"></div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+      <div id="ctx-edit" class="context-item">Edit</div>
+      <div id="ctx-delete" class="context-item">Delete</div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal">
+        <h3 id="modal-title">Add Command</h3>
+        <div class="form-group">
+          <label>Name:</label>
+          <input type="text" id="btn-name" placeholder="e.g., Build Project" />
+        </div>
+        <div class="form-group">
+          <label>Command:</label>
+          <input
+            type="text"
+            id="btn-command"
+            placeholder="e.g., npm run build"
+          />
+        </div>
+        <div class="modal-actions">
+          <button id="modal-save" class="btn-primary">Save</button>
+          <button id="modal-cancel" class="btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
