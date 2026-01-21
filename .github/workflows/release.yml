@@ -35,6 +35,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
+      - name: Create Windows icon
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "icons/icon.ico")) {
+            # Install ImageMagick via Chocolatey
+            choco install imagemagick -y
+            # Convert PNG to ICO
+            magick icons/icon.png -define icon:auto-resize=256,128,64,48,32,16 icons/icon.ico
+          }
+
       - name: Build Rust version
         run: cargo build --release
 
