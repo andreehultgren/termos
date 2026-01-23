@@ -4,6 +4,20 @@ A steaming terminal application with configurable buttons for commonly used comm
 
 <img src="./icons/icon.png" alt="Termos Icon" width="200"/>
 
+## Screenshots
+
+The default view when opening the application.
+
+<img src="./screenshots/default.png" alt="Default view"/>
+
+Create a custom command that becomes a button
+
+<img src="./screenshots/create_command.png" alt="Create buttons"/>
+
+Edit existing commands
+
+<img src="./screenshots/edit_command.png" alt="Edit stuff"/>
+
 ## Features
 
 - ✅ Interactive terminal with xterm.js and native PTY
