@@ -17,7 +17,29 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.termos.app"
+      "identifier": "com.hultan.termos",
+      "icon": ["icons/icon.icns", "icons/icon.ico", "icons/icon.png"],
+      "category": "DeveloperTool",
+      "shortDescription": "A modern terminal emulator with tabs",
+      "longDescription": "Termos is a terminal emulator built with Tauri and xterm.js, featuring multiple tabs and customizable command buttons.",
+      "macOS": {
+        "entitlements": "entitlements.plist",
+        "exceptionDomain": null,
+        "frameworks": [],
+        "minimumSystemVersion": "10.15",
+        "signingIdentity": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      },
+      "deb": {
+        "depends": []
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
     },
     "security": {
       "csp": null
@@ -28,7 +50,9 @@
         "resizable": true,
         "title": "Termos",
         "width": 1200,
-        "height": 800
+        "height": 800,
+        "minWidth": 600,
+        "minHeight": 400
       }
     ]
   }

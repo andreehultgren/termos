@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::error::Error;
 use uuid::Uuid;
 
@@ -171,6 +172,101 @@ impl Default for AppState {
     }
 }
 
+/// Manages tab IDs and tracks active tabs
+#[derive(Debug, Clone)]
+pub struct TabManager {
+    next_tab_num: u32,
+    active_tabs: HashSet<String>,
+    active_tab_id: Option<String>,
+}
+
+impl TabManager {
+    /// Creates a new TabManager
+    pub fn new() -> Self {
+        Self {
+            next_tab_num: 0,
+            active_tabs: HashSet::new(),
+            active_tab_id: None,
+        }
+    }
+
+    /// Creates a new tab and returns its ID
+    pub fn create_tab(&mut self) -> String {
+        let tab_id = format!("tab-{}", self.next_tab_num);
+        self.next_tab_num += 1;
+        self.active_tabs.insert(tab_id.clone());
+
+        // Set as active if it's the first tab
+        if self.active_tab_id.is_none() {
+            self.active_tab_id = Some(tab_id.clone());
+        }
+
+        tab_id
+    }
+
+    /// Closes a tab by ID. Returns error if tab doesn't exist or is the last tab.
+    pub fn close_tab(&mut self, tab_id: &str) -> Result<(), String> {
+        if !self.active_tabs.contains(tab_id) {
+            return Err(format!("Tab {} not found", tab_id));
+        }
+
+        if self.active_tabs.len() <= 1 {
+            return Err("Cannot close the last tab".to_string());
+        }
+
+        self.active_tabs.remove(tab_id);
+
+        // If we closed the active tab, switch to another one
+        if self.active_tab_id.as_deref() == Some(tab_id) {
+            self.active_tab_id = self.active_tabs.iter().next().cloned();
+        }
+
+        Ok(())
+    }
+
+    /// Switches to a tab by ID
+    pub fn switch_to_tab(&mut self, tab_id: &str) -> Result<(), String> {
+        if !self.active_tabs.contains(tab_id) {
+            return Err(format!("Tab {} not found", tab_id));
+        }
+        self.active_tab_id = Some(tab_id.to_string());
+        Ok(())
+    }
+
+    /// Gets the currently active tab ID
+    pub fn active_tab(&self) -> Option<&str> {
+        self.active_tab_id.as_deref()
+    }
+
+    /// Checks if a tab exists
+    pub fn has_tab(&self, tab_id: &str) -> bool {
+        self.active_tabs.contains(tab_id)
+    }
+
+    /// Gets the number of open tabs
+    pub fn tab_count(&self) -> usize {
+        self.active_tabs.len()
+    }
+
+    /// Gets all tab IDs
+    pub fn get_tab_ids(&self) -> Vec<String> {
+        let mut ids: Vec<_> = self.active_tabs.iter().cloned().collect();
+        ids.sort(); // Sort for consistent ordering
+        ids
+    }
+
+    /// Gets the next tab number (for display purposes)
+    pub fn next_tab_number(&self) -> u32 {
+        self.next_tab_num
+    }
+}
+
+impl Default for TabManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -241,5 +337,143 @@ mod tests {
 
         assert_eq!(loaded.button_manager.count(), 1);
         assert_eq!(loaded.terminal_config.cursor_blink, true);
+    }
+
+    // ============================================
+    // Tab Manager Tests
+    // ============================================
+
+    #[test]
+    fn test_tab_manager_create_tab() {
+        let mut manager = TabManager::new();
+
+        let tab1 = manager.create_tab();
+        assert_eq!(tab1, "tab-0");
+        assert_eq!(manager.tab_count(), 1);
+        assert!(manager.has_tab("tab-0"));
+
+        let tab2 = manager.create_tab();
+        assert_eq!(tab2, "tab-1");
+        assert_eq!(manager.tab_count(), 2);
+    }
+
+    #[test]
+    fn test_tab_manager_first_tab_is_active() {
+        let mut manager = TabManager::new();
+
+        let tab1 = manager.create_tab();
+        assert_eq!(manager.active_tab(), Some(tab1.as_str()));
+
+        // Creating second tab doesn't change active
+        manager.create_tab();
+        assert_eq!(manager.active_tab(), Some("tab-0"));
+    }
+
+    #[test]
+    fn test_tab_manager_close_tab() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab(); // tab-0
+        manager.create_tab(); // tab-1
+
+        let result = manager.close_tab("tab-0");
+        assert!(result.is_ok());
+        assert_eq!(manager.tab_count(), 1);
+        assert!(!manager.has_tab("tab-0"));
+        assert!(manager.has_tab("tab-1"));
+    }
+
+    #[test]
+    fn test_tab_manager_cannot_close_last_tab() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab(); // tab-0
+
+        let result = manager.close_tab("tab-0");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Cannot close the last tab");
+        assert_eq!(manager.tab_count(), 1);
+    }
+
+    #[test]
+    fn test_tab_manager_close_nonexistent_tab() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab();
+
+        let result = manager.close_tab("tab-999");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("not found"));
+    }
+
+    #[test]
+    fn test_tab_manager_switch_tab() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab(); // tab-0
+        manager.create_tab(); // tab-1
+
+        assert_eq!(manager.active_tab(), Some("tab-0"));
+
+        let result = manager.switch_to_tab("tab-1");
+        assert!(result.is_ok());
+        assert_eq!(manager.active_tab(), Some("tab-1"));
+    }
+
+    #[test]
+    fn test_tab_manager_switch_to_nonexistent_tab() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab();
+
+        let result = manager.switch_to_tab("tab-999");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tab_manager_close_active_tab_switches() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab(); // tab-0
+        manager.create_tab(); // tab-1
+        manager.create_tab(); // tab-2
+
+        // Switch to tab-1 and close it
+        manager.switch_to_tab("tab-1").unwrap();
+        assert_eq!(manager.active_tab(), Some("tab-1"));
+
+        manager.close_tab("tab-1").unwrap();
+
+        // Should have switched to another tab
+        assert!(manager.active_tab().is_some());
+        assert_ne!(manager.active_tab(), Some("tab-1"));
+    }
+
+    #[test]
+    fn test_tab_manager_get_tab_ids() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab();
+        manager.create_tab();
+        manager.create_tab();
+
+        let ids = manager.get_tab_ids();
+        assert_eq!(ids.len(), 3);
+        assert!(ids.contains(&"tab-0".to_string()));
+        assert!(ids.contains(&"tab-1".to_string()));
+        assert!(ids.contains(&"tab-2".to_string()));
+    }
+
+    #[test]
+    fn test_tab_manager_tab_numbers_increment() {
+        let mut manager = TabManager::new();
+
+        manager.create_tab(); // tab-0
+        manager.create_tab(); // tab-1
+        manager.close_tab("tab-0").unwrap();
+
+        // Next tab should be tab-2, not tab-0
+        let new_tab = manager.create_tab();
+        assert_eq!(new_tab, "tab-2");
     }
 }

@@ -1,6 +1,8 @@
-# Termos - Rust Version (Full Tauri App)
+# Termos
 
-A full-featured terminal application built with Tauri (Rust backend) and xterm.js (frontend).
+A steaming terminal application with configurable buttons for commonly used commands.
+
+<img src="./icons/icon.png" alt="Termos Icon" width="200"/>
 
 ## Features
 
@@ -144,7 +146,7 @@ On Linux, you may need to install `libgtk-3-dev` and related packages.
 
 ## Future Enhancements
 
-- [ ] Multiple terminal tabs
+- [x] Multiple terminal tabs
 - [ ] Custom themes
 - [ ] Command history search
 - [ ] Button groups/categories

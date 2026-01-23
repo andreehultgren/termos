@@ -14,58 +14,85 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+          - platform: macos-13
+            target: x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: "./ -> target"
 
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+      - name: Install dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Create Windows icon
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^1.5" --locked
+
+      - name: Generate macOS icon (if missing)
+        if: startsWith(matrix.platform, 'macos')
         run: |
-          if (-not (Test-Path "icons/icon.ico")) {
-            # Install ImageMagick via Chocolatey
-            choco install imagemagick -y
-            # Convert PNG to ICO
-            magick icons/icon.png -define icon:auto-resize=256,128,64,48,32,16 icons/icon.ico
-          }
+          if [ ! -f icons/icon.icns ]; then
+            mkdir -p icons/icon.iconset
+            sips -z 16 16 icons/icon.png --out icons/icon.iconset/icon_16x16.png
+            sips -z 32 32 icons/icon.png --out icons/icon.iconset/icon_16x16@2x.png
+            sips -z 32 32 icons/icon.png --out icons/icon.iconset/icon_32x32.png
+            sips -z 64 64 icons/icon.png --out icons/icon.iconset/icon_32x32@2x.png
+            sips -z 128 128 icons/icon.png --out icons/icon.iconset/icon_128x128.png
+            sips -z 128 128 icons/icon.png --out icons/icon.iconset/icon_128x128@2x.png
+            sips -z 256 256 icons/icon.png --out icons/icon.iconset/icon_256x256.png
+            sips -z 256 256 icons/icon.png --out icons/icon.iconset/icon_256x256@2x.png
+            sips -z 512 512 icons/icon.png --out icons/icon.iconset/icon_512x512.png
+            sips -z 512 512 icons/icon.png --out icons/icon.iconset/icon_512x512@2x.png
+            iconutil -c icns icons/icon.iconset -o icons/icon.icns
+            rm -rf icons/icon.iconset
+          fi
 
-      - name: Build Rust version
-        run: cargo build --release
+      - name: Build Tauri app
+        run: cargo tauri build
+        env:
+          TAURI_PRIVATE_KEY: ""
+          TAURI_KEY_PASSWORD: ""
 
-      - name: Create release archives
+      - name: Prepare release artifacts (macOS)
+        if: startsWith(matrix.platform, 'macos')
+        run: |
+          mkdir -p releases
+          cp target/release/bundle/dmg/*.dmg releases/Termos-${{ matrix.target }}.dmg
+
+      - name: Prepare release artifacts (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          mkdir -p releases
+          cp target/release/bundle/deb/*.deb releases/ || true
+          cp target/release/bundle/appimage/*.AppImage releases/ || true
+
+      - name: Prepare release artifacts (Windows)
+        if: matrix.platform == 'windows-latest'
         shell: bash
         run: |
           mkdir -p releases
-          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            if [ -f "target/release/termos-rust.exe" ]; then
-              7z a releases/termos-windows-x64.zip target/release/termos-rust.exe
-            fi
-          elif [ "${{ matrix.platform }}" == "macos-latest" ]; then
-            if [ -f "target/release/termos-rust" ]; then
-              tar -czf releases/termos-macos-x64.tar.gz -C target/release termos-rust
-            fi
-          else
-            if [ -f "target/release/termos-rust" ]; then
-              tar -czf releases/termos-linux-x64.tar.gz -C target/release termos-rust
-            fi
-          fi
+          cp target/release/bundle/msi/*.msi releases/ || true
+          cp target/release/bundle/nsis/*.exe releases/ || true
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
@@ -78,5 +105,6 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: termos-${{ matrix.platform }}
+          name: termos-${{ matrix.target }}
           path: releases/*
+          if-no-files-found: warn

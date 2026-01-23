@@ -17,3 +17,7 @@ tauri-build = { version = "1.5", features = [] }
 [lib]
 name = "termos"
 path = "src/lib.rs"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

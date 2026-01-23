@@ -10,42 +10,205 @@ window.addEventListener("DOMContentLoaded", async () => {
   const { listen } = window.__TAURI__.event;
 
   // ============================================
-  // TERMINAL
+  // TAB MANAGEMENT
   // ============================================
-  const term = new Terminal({
-    cursorBlink: true,
-    theme: {
-      background: "#1e1e1e",
-      foreground: "#d4d4d4",
-    },
-  });
+  const tabs = new Map(); // tabId -> { term, fitAddon, element }
+  let activeTabId = null;
 
-  const fitAddon = new FitAddon.FitAddon();
-  term.loadAddon(fitAddon);
+  const tabsContainer = document.getElementById("tabs");
+  const terminalsContainer = document.getElementById("terminals");
+  const newTabBtn = document.getElementById("new-tab-btn");
 
-  term.open(document.getElementById("terminal"));
-  fitAddon.fit();
+  function createTerminalInstance(tabId) {
+    const term = new Terminal({
+      cursorBlink: true,
+      theme: {
+        background: "#1e1e1e",
+        foreground: "#d4d4d4",
+      },
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+
+    // Create terminal DOM element
+    const termEl = document.createElement("div");
+    termEl.className = "terminal-instance";
+    termEl.id = `terminal-${tabId}`;
+    termEl.style.display = "none";
+    terminalsContainer.appendChild(termEl);
+
+    term.open(termEl);
+
+    // Send data to the backend
+    term.onData((data) => {
+      invoke("send_to_tab", { tabId, data });
+    });
+
+    return { term, fitAddon, element: termEl };
+  }
+
+  function createTabElement(tabId, tabNumber) {
+    const tabEl = document.createElement("div");
+    tabEl.className = "tab";
+    tabEl.dataset.tabId = tabId;
+
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "tab-title";
+    titleSpan.textContent = `Terminal ${tabNumber}`;
+    tabEl.appendChild(titleSpan);
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "tab-close";
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeTab(tabId);
+    });
+    tabEl.appendChild(closeBtn);
+
+    tabEl.addEventListener("click", () => {
+      switchToTab(tabId);
+    });
+
+    return tabEl;
+  }
+
+  function switchToTab(tabId) {
+    if (activeTabId === tabId) return;
+
+    // Hide current tab
+    if (activeTabId && tabs.has(activeTabId)) {
+      const current = tabs.get(activeTabId);
+      current.element.style.display = "none";
+      const currentTabEl = tabsContainer.querySelector(`[data-tab-id="${activeTabId}"]`);
+      if (currentTabEl) currentTabEl.classList.remove("active");
+    }
+
+    // Show new tab
+    const newTab = tabs.get(tabId);
+    if (newTab) {
+      newTab.element.style.display = "block";
+      const newTabEl = tabsContainer.querySelector(`[data-tab-id="${tabId}"]`);
+      if (newTabEl) newTabEl.classList.add("active");
+      activeTabId = tabId;
+
+      // Fit and focus
+      setTimeout(() => {
+        newTab.fitAddon.fit();
+        newTab.term.focus();
+      }, 10);
+    }
+  }
+
+  async function createTab() {
+    try {
+      const tabId = await invoke("create_tab");
+      const tabNumber = tabId.split("-")[1];
+
+      const tabData = createTerminalInstance(tabId);
+      tabs.set(tabId, tabData);
+
+      const tabEl = createTabElement(tabId, parseInt(tabNumber) + 1);
+      tabsContainer.appendChild(tabEl);
+
+      switchToTab(tabId);
+    } catch (err) {
+      console.error("Failed to create tab:", err);
+    }
+  }
+
+  async function closeTab(tabId) {
+    if (tabs.size <= 1) {
+      // Don't close the last tab
+      return;
+    }
+
+    try {
+      await invoke("close_tab", { tabId });
+    } catch (err) {
+      console.error("Failed to close tab:", err);
+    }
+
+    removeTabUI(tabId);
+  }
+
+  function removeTabUI(tabId) {
+    const tabData = tabs.get(tabId);
+    if (tabData) {
+      tabData.term.dispose();
+      tabData.element.remove();
+      tabs.delete(tabId);
+    }
+
+    const tabEl = tabsContainer.querySelector(`[data-tab-id="${tabId}"]`);
+    if (tabEl) tabEl.remove();
+
+    // Switch to another tab if this was active
+    if (activeTabId === tabId) {
+      activeTabId = null;
+      const remainingTabs = Array.from(tabs.keys());
+      if (remainingTabs.length > 0) {
+        switchToTab(remainingTabs[remainingTabs.length - 1]);
+      }
+    }
+  }
 
   // Listen for data from the Rust backend
   await listen("terminal-data", (event) => {
-    term.write(event.payload);
+    const { tab_id, data } = event.payload;
+    const tabData = tabs.get(tab_id);
+    if (tabData) {
+      tabData.term.write(data);
+    }
   });
 
-  // Send data to the Rust backend
-  term.onData((data) => {
-    invoke("send_to_terminal", { data });
+  // Listen for tab closed events (when PTY exits)
+  await listen("tab-closed", (event) => {
+    const { tab_id } = event.payload;
+    removeTabUI(tab_id);
   });
+
+  // New tab button
+  newTabBtn.addEventListener("click", createTab);
+
+  // Keyboard shortcut for new tab (Cmd/Ctrl + T)
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "t") {
+      e.preventDefault();
+      createTab();
+    }
+    // Close tab with Cmd/Ctrl + W
+    if ((e.metaKey || e.ctrlKey) && e.key === "w") {
+      e.preventDefault();
+      if (activeTabId) {
+        closeTab(activeTabId);
+      }
+    }
+  });
+
+  // Initialize first tab
+  const initialTabId = "tab-0";
+  const initialTabData = createTerminalInstance(initialTabId);
+  tabs.set(initialTabId, initialTabData);
+  const initialTabEl = createTabElement(initialTabId, 1);
+  tabsContainer.appendChild(initialTabEl);
+  switchToTab(initialTabId);
 
   // Handle terminal resize
-  window.addEventListener("resize", () => {
-    fitAddon.fit();
-    invoke("resize_terminal", { cols: term.cols, rows: term.rows });
-  });
+  function fitAllTerminals() {
+    tabs.forEach((tabData) => {
+      tabData.fitAddon.fit();
+    });
+    if (activeTabId && tabs.has(activeTabId)) {
+      const active = tabs.get(activeTabId);
+      invoke("resize_terminal", { cols: active.term.cols, rows: active.term.rows });
+    }
+  }
 
-  setTimeout(() => {
-    fitAddon.fit();
-    invoke("resize_terminal", { cols: term.cols, rows: term.rows });
-  }, 100);
+  window.addEventListener("resize", fitAllTerminals);
+
+  setTimeout(fitAllTerminals, 100);
 
   // ============================================
   // SIDEBAR BUTTONS (using localStorage)
@@ -82,7 +245,10 @@ window.addEventListener("DOMContentLoaded", async () => {
       el.textContent = btn.name;
       el.dataset.id = btn.id;
       el.addEventListener("click", () => {
-        invoke("send_to_terminal", { data: btn.command + "\n" });
+        // Send command to active tab
+        if (activeTabId) {
+          invoke("send_to_tab", { tabId: activeTabId, data: btn.command + "\n" });
+        }
       });
       el.addEventListener("contextmenu", (e) => {
         e.preventDefault();
@@ -229,8 +395,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const newWidth = e.clientX;
     if (newWidth >= 100 && newWidth <= 500) {
       sidebar.style.width = newWidth + "px";
-      fitAddon.fit();
-      invoke("resize_terminal", { cols: term.cols, rows: term.rows });
+      fitAllTerminals();
     }
   });
 
