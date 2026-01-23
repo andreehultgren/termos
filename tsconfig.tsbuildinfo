@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/contextmenu.tsx","./src/components/divider.tsx","./src/components/modal.tsx","./src/components/sidebar.tsx","./src/components/tabbar.tsx","./src/components/terminal.tsx","./src/hooks/uselocalstorage.ts"],"version":"5.9.3"}
