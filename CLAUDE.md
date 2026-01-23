@@ -32,15 +32,30 @@ When asked to develop something new, build tests first. When building the functi
 
 ```
 termos/
-├── src/
-│   ├── main.rs          # Tauri backend - PTY management, tab lifecycle
-│   └── lib.rs           # Data structures (CommandButton, AppState)
-├── dist/
-│   ├── index.html       # HTML structure
-│   ├── renderer.js      # Frontend logic - tabs, buttons, terminal
-│   └── style.css        # Styling
-├── Cargo.toml           # Rust dependencies
-└── tauri.conf.json      # Tauri configuration
+├── src/                      # Frontend React + TypeScript
+│   ├── main.tsx              # React entry point
+│   ├── App.tsx               # Main app component, state management
+│   ├── style.css             # Global styles
+│   ├── components/
+│   │   ├── Sidebar.tsx       # Command buttons sidebar
+│   │   ├── TabBar.tsx        # Tab bar with tab list
+│   │   ├── Terminal.tsx      # xterm.js wrapper component
+│   │   ├── Modal.tsx         # Add/edit command modal
+│   │   ├── ContextMenu.tsx   # Right-click context menu
+│   │   └── Divider.tsx       # Resizable divider
+│   └── hooks/
+│       └── useLocalStorage.ts # localStorage hook
+├── src-tauri/                # Tauri backend (if using tauri-app structure)
+│   └── src/
+│       ├── main.rs           # PTY management, tab lifecycle
+│       └── lib.rs            # Data structures
+├── index.html                # HTML entry point (root for Vite)
+├── dist/                     # Vite build output (generated)
+├── package.json              # Node dependencies (React, Vite, xterm)
+├── vite.config.ts            # Vite + React configuration
+├── tsconfig.json             # TypeScript configuration
+├── Cargo.toml                # Rust dependencies
+└── tauri.conf.json           # Tauri configuration
 ```
 
 ## Key Components
@@ -57,16 +72,24 @@ termos/
   - `terminal-data` - Emits PTY output with `{tab_id, data}`
   - `tab-closed` - Emits when PTY process exits
 
-### Frontend (JavaScript - `dist/renderer.js`)
+### Frontend (React + TypeScript - `src/`)
 
-- **Tab Management**:
-  - `tabs` Map: tabId -> {term, fitAddon, element}
-  - `createTab()` / `closeTab()` - Tab lifecycle
-  - `switchToTab()` - Tab switching logic
-- **Keyboard Shortcuts**:
+Built with Vite + React. Run `npm run dev` for HMR dev server.
+
+- **App.tsx**: Main component, manages tabs state and Tauri event listeners
+- **components/**:
+  - `Sidebar.tsx` - Command buttons with add/edit/delete
+  - `TabBar.tsx` - Tab list and new tab button
+  - `Terminal.tsx` - xterm.js wrapper with imperative handle
+  - `Modal.tsx` - Add/edit command dialog
+  - `ContextMenu.tsx` - Right-click menu
+  - `Divider.tsx` - Resizable sidebar divider
+- **hooks/**:
+  - `useLocalStorage.ts` - Persisted state hook
+- **Keyboard Shortcuts** (in App.tsx):
   - Cmd/Ctrl+T - New tab
   - Cmd/Ctrl+W - Close tab
-- **Sidebar Buttons**: Stored in localStorage (`termos-buttons`)
+  - Escape - Close modal/context menu
 
 ## Data Flow
 
@@ -89,7 +112,9 @@ JS listen → tabs.get(tab_id).term.write(data)
 ## Build & Run
 
 ```bash
-cargo tauri dev    # Development
+npm install        # Install frontend dependencies (first time)
+npm run dev        # Start Vite dev server only (for frontend work)
+cargo tauri dev    # Development (starts Vite + Tauri)
 cargo tauri build  # Production build
 ```
 
