@@ -144,19 +144,6 @@ body {
   border-bottom: 2px solid #007acc;
 }
 
-.tab-title {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.85rem;
-  color: #ccc;
-}
-
-.tab.active .tab-title {
-  color: #fff;
-}
-
 /* Terminals Container */
 #terminals {
   flex: 1;

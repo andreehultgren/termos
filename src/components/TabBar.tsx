@@ -32,6 +32,15 @@ const NewTabButton = styled.button`
   }
 `;
 
+const TabTitle = styled.span<{ $active: boolean }>`
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  color: ${(props) => (props.$active ? "#fff" : "#ccc")};
+`;
+
 interface Tab {
   id: string;
   title: string;
@@ -61,7 +70,7 @@ export function TabBar({
             className={`tab ${tab.id === activeTabId ? "active" : ""}`}
             onMouseUp={() => onSelectTab(tab.id)}
           >
-            <span className="tab-title">{tab.title}</span>
+            <TabTitle $active={tab.id === activeTabId}>{tab.title}</TabTitle>
             <CloseTabButton
               type="button"
               onClick={(e) => {
