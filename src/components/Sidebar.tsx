@@ -41,6 +41,29 @@ const AddButton = styled.button`
     background: #005a9e;
   }
 `;
+const StyledSidebar = styled.div`
+	width: 200px;
+	background: #2d2d2d;
+	color: #fff;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+`;
+
+const SidebarHeader = styled.div`
+	padding: 1rem;
+	background: #252525;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: 1px solid #3d3d3d;
+
+`;
+
+const SidebarH2 = styled.div`
+	font-size: 1rem;
+	font-weight: 600;
+`;
 
 interface CommandButton {
 	id: string;
@@ -157,13 +180,13 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 
 	return (
 		<>
-			<div id="sidebar">
-				<div id="sidebar-header">
-					<h2>Commands</h2>
+			<StyledSidebar>
+				<SidebarHeader>
+					<SidebarH2>Commands</SidebarH2>
 					<AddButton onClick={handleAddClick} type="button">
 						+ Add
 					</AddButton>
-				</div>
+				</SidebarHeader>
 				<div id="button-list">
 					{buttons.map((btn) => (
 						<CommandButton
@@ -176,7 +199,7 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 						</CommandButton>
 					))}
 				</div>
-			</div>
+			</StyledSidebar>
 
 			<Modal
 				isOpen={modalOpen}

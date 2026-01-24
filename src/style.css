@@ -17,30 +17,6 @@ body {
 	width: 100vw;
 }
 
-/* Sidebar */
-#sidebar {
-	width: 200px;
-	background: #2d2d2d;
-	color: #fff;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-}
-
-#sidebar-header {
-	padding: 1rem;
-	background: #252525;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border-bottom: 1px solid #3d3d3d;
-}
-
-#sidebar-header h2 {
-	font-size: 1rem;
-	font-weight: 600;
-}
-
 #button-list {
 	flex: 1;
 	overflow-y: auto;
