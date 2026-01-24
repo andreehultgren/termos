@@ -1,24 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
-import { Sidebar } from "./components/Sidebar";
-import { TabBar } from "./components/TabBar";
-import { Terminal, type TerminalHandle } from "./components/Terminal";
-import { Divider } from "./components/Divider";
+import { Sidebar } from "./layouts/Sidebar";
+import { TabBar, Terminal, type TerminalHandle } from "./views";
+import { Divider } from "./views";
+import { TerminalContainer } from "./components";
 import styled from "styled-components";
 
 const Terminals = styled.div`
 	flex: 1;
 	position: relative;
-	overflow: hidden;
-`;
-
-const TerminalContainer = styled.div`
-	flex: 1;
-	background: #1e1e1e;
-	position: relative;
-	display: flex;
-	flex-direction: column;
 	overflow: hidden;
 `;
 
