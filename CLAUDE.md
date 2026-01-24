@@ -56,12 +56,13 @@ termos/
 │   │
 │   ├── views/                    # Composite components (features)
 │   │   ├── index.tsx             # Barrel exports
-│   │   ├── TabBar.tsx            # Tab bar with tabs and new button
-│   │   ├── Terminal.tsx          # xterm.js wrapper with imperative handle
-│   │   ├── Modal.tsx             # Add/edit command modal
+│   │   ├── CommandPalette.tsx    # Cmd+K command search/execute modal
 │   │   ├── CommandParameterModal.tsx  # Parameter input modal
 │   │   ├── ContextMenu.tsx       # Right-click menu
-│   │   └── Divider.tsx           # Resizable sidebar divider
+│   │   ├── Divider.tsx           # Resizable sidebar divider
+│   │   ├── Modal.tsx             # Add/edit command modal
+│   │   ├── TabBar.tsx            # Tab bar with tabs and new button
+│   │   └── Terminal.tsx          # xterm.js wrapper with imperative handle
 │   │
 │   ├── layouts/                  # Layout components
 │   │   └── Sidebar.tsx           # Command buttons sidebar
@@ -109,9 +110,17 @@ Built with Vite + React + styled-components.
 - Keyboard shortcuts
 
 **Keyboard Shortcuts**:
+
 - `Cmd/Ctrl+T` - New tab
 - `Cmd/Ctrl+W` - Close tab
-- `Cmd/Ctrl+K` - Command palette (if enabled)
+- `Cmd/Ctrl+K` - Open command palette
+
+**Command Palette** (`Cmd/Ctrl+K`):
+Keyboard-driven modal for searching and executing saved commands.
+
+- Fuzzy search through command names and commands
+- Arrow keys to navigate, Enter to execute, Escape to close
+- Supports commands with template variables
 
 **Command Templates**:
 Commands support template variables using `{{variable}}` syntax.

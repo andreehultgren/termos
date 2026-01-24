@@ -1,3 +1,4 @@
+export { CommandPalette } from "./CommandPalette";
 export { CommandParameterModal } from "./CommandParameterModal";
 export { ContextMenu } from "./ContextMenu";
 export { Divider } from "./Divider";

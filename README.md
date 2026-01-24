@@ -18,12 +18,17 @@ Edit existing commands
 
 <img src="./screenshots/edit_command.png" alt="Edit stuff"/>
 
+Access the command palette with Cmd/Ctrl+K
+
+<img src="./screenshots/command_palette.png" alt="Command palette"/>
+
 ## Features
 
 - Interactive terminal with xterm.js and native PTY
 - Multiple terminal tabs
 - Resizable sidebar with command buttons
 - Add, edit, and delete command shortcuts
+- Command palette for quick keyboard-driven command execution
 - Command templates with variables (`{{variable}}` syntax)
 - Local storage persistence
 - Context menus and modal dialogs
@@ -59,11 +64,19 @@ This creates a native application bundle in `target/release/bundle/`
 
 ## Keyboard Shortcuts
 
-| Shortcut     | Action          |
-| ------------ | --------------- |
-| Cmd/Ctrl+T   | New tab         |
-| Cmd/Ctrl+W   | Close tab       |
-| Cmd/Ctrl+K   | Command palette |
+| Shortcut   | Action          |
+| ---------- | --------------- |
+| Cmd/Ctrl+T | New tab         |
+| Cmd/Ctrl+W | Close tab       |
+| Cmd/Ctrl+K | Command palette |
+
+## Command Palette
+
+Press `Cmd/Ctrl+K` to open the command palette for quick keyboard-driven command execution:
+
+- Fuzzy search through all saved commands
+- Navigate with arrow keys, execute with Enter, close with Escape
+- Works seamlessly with command templates
 
 ## Command Templates
 

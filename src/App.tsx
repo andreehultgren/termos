@@ -2,9 +2,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
 import { Sidebar } from "./layouts/Sidebar";
-import { TabBar, Terminal, type TerminalHandle } from "./views";
-import { Divider } from "./views";
+import {
+	CommandPalette,
+	CommandParameterModal,
+	Divider,
+	TabBar,
+	Terminal,
+	type TerminalHandle,
+} from "./views";
 import { TerminalContainer } from "./components";
+import { replaceTemplateVariables } from "./utils/commandTemplate";
 import styled from "styled-components";
 
 const Terminals = styled.div`
@@ -27,11 +34,23 @@ interface TabClosedPayload {
 	tab_id: string;
 }
 
+interface CommandButton {
+	id: string;
+	name: string;
+	command: string;
+}
+
 let tabCounter = 0;
 
 export function App() {
 	const [tabs, setTabs] = useState<Tab[]>([]);
 	const [activeTabId, setActiveTabId] = useState<string>("");
+	const [paletteOpen, setPaletteOpen] = useState(false);
+	const [paramModal, setParamModal] = useState<{
+		isOpen: boolean;
+		button: CommandButton | null;
+		variables: string[];
+	}>({ isOpen: false, button: null, variables: [] });
 	const terminalRefs = useRef<Map<string, TerminalHandle>>(new Map());
 	const initializedRef = useRef(false);
 
@@ -68,9 +87,10 @@ export function App() {
 		};
 	}, []);
 
-	// Keyboard shortcuts
+	// Keyboard shortcuts (use capture phase to intercept before xterm)
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			console.log("Key pressed:", e.key, "meta:", e.metaKey, "ctrl:", e.ctrlKey);
 			if ((e.metaKey || e.ctrlKey) && e.key === "t") {
 				e.preventDefault();
 				handleNewTab();
@@ -81,10 +101,19 @@ export function App() {
 					handleCloseTab(activeTabId);
 				}
 			}
+			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+				e.preventDefault();
+				e.stopPropagation();
+				console.log("CMD+K pressed, toggling palette");
+				setPaletteOpen((prev) => {
+					console.log("Previous state:", prev, "New state:", !prev);
+					return !prev;
+				});
+			}
 		};
 
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
+		window.addEventListener("keydown", handleKeyDown, true);
+		return () => window.removeEventListener("keydown", handleKeyDown, true);
 	}, [activeTabId, tabs.length]);
 
 	// Handle window resize
@@ -180,29 +209,65 @@ export function App() {
 		[],
 	);
 
+	const handleOpenParamModal = (button: CommandButton, variables: string[]) => {
+		setParamModal({ isOpen: true, button, variables });
+	};
+
+	const handleParamSubmit = (values: Record<string, string>) => {
+		if (paramModal.button) {
+			const finalCommand = replaceTemplateVariables(
+				paramModal.button.command,
+				values,
+			);
+			handleRunCommand(`${finalCommand}\n`);
+		}
+		setParamModal({ isOpen: false, button: null, variables: [] });
+	};
+
+	const handleParamClose = () => {
+		setParamModal({ isOpen: false, button: null, variables: [] });
+	};
+
 	return (
-		<div id="app">
-			<Sidebar onRunCommand={handleRunCommand} />
-			<Divider onResize={fitAllTerminals} />
-			<TerminalContainer>
-				<TabBar
-					tabs={tabs}
-					activeTabId={activeTabId}
-					onSelectTab={handleSelectTab}
-					onCloseTab={handleCloseTab}
-					onNewTab={handleNewTab}
-				/>
-				<Terminals>
-					{tabs.map((tab) => (
-						<Terminal
-							key={tab.id}
-							ref={(handle) => setTerminalRef(tab.id, handle)}
-							onData={handleTerminalData(tab.id)}
-							visible={tab.id === activeTabId}
-						/>
-					))}
-				</Terminals>
-			</TerminalContainer>
-		</div>
+		<>
+			<div id="app">
+				<Sidebar onRunCommand={handleRunCommand} />
+				<Divider onResize={fitAllTerminals} />
+				<TerminalContainer>
+					<TabBar
+						tabs={tabs}
+						activeTabId={activeTabId}
+						onSelectTab={handleSelectTab}
+						onCloseTab={handleCloseTab}
+						onNewTab={handleNewTab}
+					/>
+					<Terminals>
+						{tabs.map((tab) => (
+							<Terminal
+								key={tab.id}
+								ref={(handle) => setTerminalRef(tab.id, handle)}
+								onData={handleTerminalData(tab.id)}
+								visible={tab.id === activeTabId}
+							/>
+						))}
+					</Terminals>
+				</TerminalContainer>
+			</div>
+
+			<CommandPalette
+				isOpen={paletteOpen}
+				onClose={() => setPaletteOpen(false)}
+				onRunCommand={handleRunCommand}
+				onOpenParamModal={handleOpenParamModal}
+			/>
+
+			<CommandParameterModal
+				isOpen={paramModal.isOpen}
+				commandName={paramModal.button?.name ?? ""}
+				variables={paramModal.variables}
+				onSubmit={handleParamSubmit}
+				onClose={handleParamClose}
+			/>
+		</>
 	);
 }
