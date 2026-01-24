@@ -15,7 +15,21 @@ const CloseTabButton = styled.button`
 		background: #4d4d4d;
   	color: #fff;
 	}
+`;
 
+const NewTabButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.2rem;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+
+	&:hover {
+		background: #3d3d3d;
+		color: #fff;
+	}
 `;
 
 interface Tab {
@@ -60,9 +74,9 @@ export function TabBar({
 					</div>
 				))}
 			</div>
-			<button className="new-tab-button" onClick={onNewTab} type="button">
+			<NewTabButton onClick={onNewTab} type="button">
 				+
-			</button>
+			</NewTabButton>
 		</div>
 	);
 }
