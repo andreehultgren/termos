@@ -143,7 +143,6 @@ fn close_tab(tab_id: String, state: State<TabsState>) -> Result<(), String> {
 
 #[tauri::command]
 fn send_to_tab(tab_id: String, data: String, state: State<TabsState>) -> Result<(), String> {
-    println!("Sending to tab {}: {:?}", tab_id, data);
     let tabs = state.tabs.lock().map_err(|e| e.to_string())?;
     if let Some(tab) = tabs.get(&tab_id) {
         let mut writer = tab.writer.lock().map_err(|e| e.to_string())?;
@@ -151,7 +150,6 @@ fn send_to_tab(tab_id: String, data: String, state: State<TabsState>) -> Result<
             .write_all(data.as_bytes())
             .map_err(|e| e.to_string())?;
         writer.flush().map_err(|e| e.to_string())?;
-        println!("Successfully sent data to tab {}", tab_id);
         Ok(())
     } else {
         Err(format!("Tab {} not found", tab_id))
