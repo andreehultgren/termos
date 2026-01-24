@@ -86,7 +86,10 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
     // Get user's home directory for working directory
     let home_dir = std::env::var("USERPROFILE")
         .or_else(|_| std::env::var("HOME"))
-        .unwrap_or_else(|_| ".".to_string());
+        .unwrap_or_else(|e| {
+            eprintln!("Failed to get home directory (USERPROFILE/HOME): {e}, using current dir");
+            ".".to_string()
+        });
 
     // Spawn shell as login shell to inherit user's PATH
     let mut cmd = if cfg!(windows) {
@@ -127,15 +130,15 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
             match reader.read(&mut buf) {
                 Ok(n) if n > 0 => {
                     let data = String::from_utf8_lossy(&buf[..n]).to_string();
-                    window
-                        .emit(
-                            "terminal-data",
-                            TabData {
-                                tab_id: tab_id_clone.clone(),
-                                data,
-                            },
-                        )
-                        .ok();
+                    if let Err(e) = window.emit(
+                        "terminal-data",
+                        TabData {
+                            tab_id: tab_id_clone.clone(),
+                            data,
+                        },
+                    ) {
+                        eprintln!("Failed to emit terminal-data for tab {}: {e}", tab_id_clone);
+                    }
                 }
                 Ok(_) => {
                     break;
@@ -149,8 +152,12 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
         // Clean up when PTY closes
         if let Ok(mut tabs_guard) = tabs_clone.lock() {
             tabs_guard.remove(&tab_id_clone);
+        } else {
+            eprintln!("Failed to acquire lock for tab cleanup: {}", tab_id_clone);
         }
-        window.emit("tab-closed", TabClosed { tab_id: tab_id_clone }).ok();
+        if let Err(e) = window.emit("tab-closed", TabClosed { tab_id: tab_id_clone.clone() }) {
+            eprintln!("Failed to emit tab-closed for tab {}: {e}", tab_id_clone);
+        }
     });
 
     Ok(())
