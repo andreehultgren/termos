@@ -67,7 +67,7 @@ export function CommandParameterModal({
 		<ModalOverlay onMouseUp={handleOverlayClick}>
 			<ModalContainer>
 				<h3>Run: {commandName}</h3>
-				<p className="modal-subtitle">Enter values for the parameters:</p>
+				<p>Enter values for the parameters:</p>
 				{variables.map((varName, index) => (
 					<FormGroup key={varName}>
 						<FormLabel htmlFor={`param-input-${index}`}>{varName}</FormLabel>
