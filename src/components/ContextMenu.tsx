@@ -1,4 +1,17 @@
 import { useEffect } from "react";
+import styled from "styled-components";
+
+const ContextItem = styled.div`
+
+	padding: 0.6rem 1rem;
+	cursor: pointer;
+	color: #fff;
+	transition: background 0.2s;
+
+	&:hover {
+	  background: #3d3d3d;
+  }
+`;
 
 interface ContextMenuProps {
 	x: number;
@@ -23,12 +36,8 @@ export function ContextMenu({
 
 	return (
 		<div className="context-menu" style={{ display: "block", left: x, top: y }}>
-			<div className="context-item" onMouseUp={onEdit}>
-				Edit
-			</div>
-			<div className="context-item" onMouseUp={onDelete}>
-				Delete
-			</div>
+			<ContextItem onMouseUp={onEdit}>Edit</ContextItem>
+			<ContextItem onMouseUp={onDelete}>Delete</ContextItem>
 		</div>
 	);
 }
