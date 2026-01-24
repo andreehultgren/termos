@@ -1,4 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import ModalOverlay from "./ModalOverlay";
+import ModalContainer from "./ModalContainer";
+import FormGroup from "./FormGroup";
+import ModalActions from "./ModalActions";
+import Button from "./Button";
+import FormLabel from "./FormLabel";
+import FormInput from "./FormInput";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -57,18 +64,14 @@ export function CommandParameterModal({
 	if (!isOpen) return null;
 
 	return (
-		<div
-			className="modal-overlay"
-			style={{ display: "flex" }}
-			onMouseUp={handleOverlayClick}
-		>
-			<div className="modal">
+		<ModalOverlay onMouseUp={handleOverlayClick}>
+			<ModalContainer>
 				<h3>Run: {commandName}</h3>
-				<p className="modal-subtitle">Enter values for the parameters:</p>
+				<p>Enter values for the parameters:</p>
 				{variables.map((varName, index) => (
-					<div className="form-group" key={varName}>
-						<label htmlFor={`param-input-${index}`}>{varName}</label>
-						<input
+					<FormGroup key={varName}>
+						<FormLabel htmlFor={`param-input-${index}`}>{varName}</FormLabel>
+						<FormInput
 							id={`param-input-${index}`}
 							ref={index === 0 ? firstInputRef : undefined}
 							type="text"
@@ -77,17 +80,17 @@ export function CommandParameterModal({
 							onKeyDown={(e) => handleKeyDown(e, index)}
 							placeholder={`Enter ${varName}`}
 						/>
-					</div>
+					</FormGroup>
 				))}
-				<div className="modal-actions">
-					<button className="btn-primary" onClick={handleSubmit} type="button">
+				<ModalActions>
+					<Button variant="primary" onClick={handleSubmit} type="button">
 						Run
-					</button>
-					<button className="btn-secondary" onClick={onClose} type="button">
+					</Button>
+					<Button variant="secondary" onClick={onClose} type="button">
 						Cancel
-					</button>
-				</div>
-			</div>
-		</div>
+					</Button>
+				</ModalActions>
+			</ModalContainer>
+		</ModalOverlay>
 	);
 }

@@ -48,7 +48,7 @@ const TabContainer = styled.div<{ $active: boolean }>`
   background: ${(props) => (props.$active ? "#1e1e1e" : "#2d2d2d")};
   border-right: 1px solid #3d3d3d;
   border-bottom: ${(props) =>
-    props.$active ? "2px solid #007acc" : "2px solid transparent"};
+		props.$active ? "2px solid #007acc" : "2px solid transparent"};
   cursor: pointer;
   min-width: 120px;
   max-width: 200px;
@@ -60,54 +60,75 @@ const TabContainer = styled.div<{ $active: boolean }>`
   }
 `;
 
+const Tabs = styled.div`
+
+	display: flex;
+	flex: 1;
+	overflow-x: auto;
+	overflow-y: hidden;
+
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+`;
+
+const TabBarContainer = styled.div`
+	display: flex;
+	background: #252525;
+	border-bottom: 1px solid #3d3d3d;
+	min-height: 36px;
+	align-items: stretch;
+`;
+
 interface Tab {
-  id: string;
-  title: string;
+	id: string;
+	title: string;
 }
 
 interface TabBarProps {
-  tabs: Tab[];
-  activeTabId: string | null;
-  onSelectTab: (tabId: string) => void;
-  onCloseTab: (tabId: string) => void;
-  onNewTab: () => void;
+	tabs: Tab[];
+	activeTabId: string | null;
+	onSelectTab: (tabId: string) => void;
+	onCloseTab: (tabId: string) => void;
+	onNewTab: () => void;
 }
 
 export function TabBar({
-  tabs,
-  activeTabId,
-  onSelectTab,
-  onCloseTab,
-  onNewTab,
+	tabs,
+	activeTabId,
+	onSelectTab,
+	onCloseTab,
+	onNewTab,
 }: TabBarProps) {
-  return (
-    <div id="tab-bar">
-      <div id="tabs">
-        {tabs.map((tab) => {
-          const isActive = tab.id === activeTabId;
-          return (
-            <TabContainer
-              key={tab.id}
-              $active={isActive}
-              onMouseUp={() => onSelectTab(tab.id)}
-            >
-              <TabTitle $active={isActive}>{tab.title}</TabTitle>
-              <CloseTabButton
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCloseTab(tab.id);
-                }}
-              >
-                x
-              </CloseTabButton>
-            </TabContainer>
-          );
-        })}
-      </div>
-      <NewTabButton onClick={onNewTab} type="button">
-        +
-      </NewTabButton>
-    </div>
-  );
+	return (
+		<TabBarContainer>
+			<Tabs>
+				{tabs.map((tab) => {
+					const isActive = tab.id === activeTabId;
+					return (
+						<TabContainer
+							key={tab.id}
+							$active={isActive}
+							onMouseUp={() => onSelectTab(tab.id)}
+						>
+							<TabTitle $active={isActive}>{tab.title}</TabTitle>
+							<CloseTabButton
+								type="button"
+								onClick={(e) => {
+									e.stopPropagation();
+									onCloseTab(tab.id);
+								}}
+							>
+								x
+							</CloseTabButton>
+						</TabContainer>
+					);
+				})}
+			</Tabs>
+			<NewTabButton onClick={onNewTab} type="button">
+				+
+			</NewTabButton>
+		</TabBarContainer>
+	);
 }

@@ -1,4 +1,17 @@
 import { useRef, useEffect, useCallback } from "react";
+import styled from "styled-components";
+
+const StyledDivider = styled.div`
+	width: 4px;
+	background: #3d3d3d;
+	cursor: col-resize;
+	transition: background 0.2s;
+
+
+  &:hover {
+	  background: #007acc;
+  }
+`;
 
 interface DividerProps {
 	onResize: () => void;
@@ -57,5 +70,5 @@ export function Divider({ onResize }: DividerProps) {
 		document.body.style.userSelect = "none";
 	};
 
-	return <div id="divider" onMouseDown={handleMouseDown} />;
+	return <StyledDivider onMouseDown={handleMouseDown} />;
 }

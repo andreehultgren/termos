@@ -1,4 +1,18 @@
 import { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
+import ModalOverlay from "./ModalOverlay";
+import ModalContainer from "./ModalContainer";
+import FormGroup from "./FormGroup";
+import ModalActions from "./ModalActions";
+import Button from "./Button";
+import FormLabel from "./FormLabel";
+import FormInput from "./FormInput";
+
+const InfoText = styled.p`
+	color: #888;
+	font-size: 0.85rem;
+	margin-top: 0.5rem;
+`;
 
 interface ModalProps {
 	isOpen: boolean;
@@ -47,17 +61,14 @@ export function Modal({
 	if (!isOpen) return null;
 
 	return (
-		<div
-			className="modal-overlay"
-			style={{ display: "flex" }}
-			onMouseUp={handleOverlayClick}
-		>
-			<div className="modal">
+		<ModalOverlay onMouseUp={handleOverlayClick}>
+			<ModalContainer>
 				<h3>{title}</h3>
-				<div className="form-group">
-					<p>Name:</p>
-					<input
+				<FormGroup>
+					<FormLabel htmlFor="name-input">Name:</FormLabel>
+					<FormInput
 						ref={nameInputRef}
+						id="name-input"
 						type="text"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
@@ -66,11 +77,11 @@ export function Modal({
 							e.key === "Enter" && document.getElementById("cmd-input")?.focus()
 						}
 					/>
-				</div>
-				<div className="form-group">
-					<p>Command:</p>
+				</FormGroup>
+				<FormGroup>
+					<FormLabel htmlFor="cmd-input">Command:</FormLabel>
 
-					<input
+					<FormInput
 						id="cmd-input"
 						type="text"
 						value={command}
@@ -78,19 +89,19 @@ export function Modal({
 						placeholder="e.g., npm run build"
 						onKeyDown={(e) => e.key === "Enter" && handleSave()}
 					/>
-					<p className="info-text">
+					<InfoText>
 						If you want parameters, add {"{{variable_name}}"} to the command.
-					</p>
-				</div>
-				<div className="modal-actions">
-					<button className="btn-primary" onClick={handleSave} type="button">
+					</InfoText>
+				</FormGroup>
+				<ModalActions>
+					<Button variant="primary" onClick={handleSave} type="button">
 						Save
-					</button>
-					<button className="btn-secondary" onClick={onClose} type="button">
+					</Button>
+					<Button variant="secondary" onClick={onClose} type="button">
 						Cancel
-					</button>
-				</div>
-			</div>
-		</div>
+					</Button>
+				</ModalActions>
+			</ModalContainer>
+		</ModalOverlay>
 	);
 }

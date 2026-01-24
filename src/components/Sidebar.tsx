@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import styled from "styled-components";
 import { Modal } from "./Modal";
 import { ContextMenu } from "./ContextMenu";
 import { CommandParameterModal } from "./CommandParameterModal";
@@ -7,6 +8,69 @@ import {
 	parseTemplateVariables,
 	replaceTemplateVariables,
 } from "../utils/commandTemplate";
+
+const CommandButton = styled.button`
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	margin-bottom: 0.4rem;
+	background: #3d3d3d;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	text-align: left;
+	cursor: pointer;
+	transition: background 0.2s;
+	font-size: 0.9rem;
+  &:hover{
+    background: #4d4d4d;
+  }
+`;
+
+const ButtonList = styled.div`
+	flex: 1;
+	overflow-y: auto;
+	padding: 0.5rem;
+
+`;
+
+const AddButton = styled.button`
+  background: #007acc;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+
+
+  &:hover {
+    background: #005a9e;
+  }
+`;
+const StyledSidebar = styled.div`
+	width: 200px;
+	background: #2d2d2d;
+	color: #fff;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+`;
+
+const SidebarHeader = styled.div`
+	padding: 1rem;
+	background: #252525;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: 1px solid #3d3d3d;
+
+`;
+
+const SidebarH2 = styled.div`
+	font-size: 1rem;
+	font-weight: 600;
+`;
 
 interface CommandButton {
 	id: string;
@@ -123,27 +187,26 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 
 	return (
 		<>
-			<div id="sidebar">
-				<div id="sidebar-header">
-					<h2>Commands</h2>
-					<button className="add-button" onClick={handleAddClick} type="button">
+			<StyledSidebar>
+				<SidebarHeader>
+					<SidebarH2>Commands</SidebarH2>
+					<AddButton onClick={handleAddClick} type="button">
 						+ Add
-					</button>
-				</div>
-				<div id="button-list">
+					</AddButton>
+				</SidebarHeader>
+				<ButtonList>
 					{buttons.map((btn) => (
-						<button
+						<CommandButton
 							key={btn.id}
-							className="command-btn"
 							onClick={() => handleCommandClick(btn)}
 							onContextMenu={(e) => handleContextMenu(e, btn.id)}
 							type="button"
 						>
 							{btn.name}
-						</button>
+						</CommandButton>
 					))}
-				</div>
-			</div>
+				</ButtonList>
+			</StyledSidebar>
 
 			<Modal
 				isOpen={modalOpen}
