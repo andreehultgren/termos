@@ -1,3 +1,23 @@
+import styled from "styled-components";
+
+const CloseTabButton = styled.button`
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  border-radius: 3px;
+	line-height: 1;
+	transition: background 0.2s ease, color 0.2s ease;
+
+	&:hover {
+		background: #4d4d4d;
+  	color: #fff;
+	}
+
+`;
+
 interface Tab {
 	id: string;
 	title: string;
@@ -28,16 +48,15 @@ export function TabBar({
 						onMouseUp={() => onSelectTab(tab.id)}
 					>
 						<span className="tab-title">{tab.title}</span>
-						<button
-							className="tab-close"
+						<CloseTabButton
 							type="button"
 							onClick={(e) => {
 								e.stopPropagation();
 								onCloseTab(tab.id);
 							}}
 						>
-							×
-						</button>
+							x
+						</CloseTabButton>
 					</div>
 				))}
 			</div>

@@ -157,25 +157,6 @@ body {
   color: #fff;
 }
 
-.tab-close {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1.1rem;
-  cursor: pointer;
-  padding: 0 0.25rem;
-  border-radius: 3px;
-  line-height: 1;
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-
-.tab-close:hover {
-  background: #4d4d4d;
-  color: #fff;
-}
-
 .new-tab-button {
   background: none;
   border: none;
