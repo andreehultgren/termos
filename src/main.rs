@@ -5,6 +5,7 @@ use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use tauri::{Manager, State, Window};
 use thiserror::Error;
@@ -69,7 +70,7 @@ struct TabPty {
 
 struct TabsState {
     tabs: Arc<Mutex<HashMap<String, TabPty>>>,
-    next_tab_num: Arc<Mutex<u32>>,
+    next_tab_num: AtomicU32,
 }
 
 fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, TabPty>>>) -> Result<(), PtyError> {
@@ -169,12 +170,8 @@ fn create_tab(window: Window, state: State<TabsState>) -> Result<String, String>
 }
 
 fn create_tab_inner(window: Window, state: State<TabsState>) -> Result<String, PtyError> {
-    let tab_id = {
-        let mut num = state.next_tab_num.lock()?;
-        let id = format!("tab-{}", *num);
-        *num += 1;
-        id
-    };
+    let num = state.next_tab_num.fetch_add(1, Ordering::Relaxed);
+    let tab_id = format!("tab-{num}");
 
     spawn_tab(tab_id.clone(), window, state.tabs.clone())?;
     Ok(tab_id)
@@ -230,7 +227,7 @@ fn main() {
         .setup(|app| {
             app.manage(TabsState {
                 tabs: Arc::new(Mutex::new(HashMap::new())),
-                next_tab_num: Arc::new(Mutex::new(1)),
+                next_tab_num: AtomicU32::new(1),
             });
 
             Ok(())
