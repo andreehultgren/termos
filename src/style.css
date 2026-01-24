@@ -122,28 +122,6 @@ body {
   height: 4px;
 }
 
-.tab {
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem 0 1rem;
-  background: #2d2d2d;
-  border-right: 1px solid #3d3d3d;
-  cursor: pointer;
-  min-width: 120px;
-  max-width: 200px;
-  transition: background 0.2s;
-  gap: 0.5rem;
-}
-
-.tab:hover {
-  background: #3d3d3d;
-}
-
-.tab.active {
-  background: #1e1e1e;
-  border-bottom: 2px solid #007acc;
-}
-
 /* Terminals Container */
 #terminals {
   flex: 1;

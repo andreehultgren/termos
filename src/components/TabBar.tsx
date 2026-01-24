@@ -41,6 +41,25 @@ const TabTitle = styled.span<{ $active: boolean }>`
   color: ${(props) => (props.$active ? "#fff" : "#ccc")};
 `;
 
+const TabContainer = styled.div<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem 0 1rem;
+  background: ${(props) => (props.$active ? "#1e1e1e" : "#2d2d2d")};
+  border-right: 1px solid #3d3d3d;
+  border-bottom: ${(props) =>
+    props.$active ? "2px solid #007acc" : "2px solid transparent"};
+  cursor: pointer;
+  min-width: 120px;
+  max-width: 200px;
+  transition: background 0.2s ease;
+  gap: 0.5rem;
+
+  &:hover {
+    background: #3d3d3d;
+  }
+`;
+
 interface Tab {
   id: string;
   title: string;
@@ -64,24 +83,27 @@ export function TabBar({
   return (
     <div id="tab-bar">
       <div id="tabs">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={`tab ${tab.id === activeTabId ? "active" : ""}`}
-            onMouseUp={() => onSelectTab(tab.id)}
-          >
-            <TabTitle $active={tab.id === activeTabId}>{tab.title}</TabTitle>
-            <CloseTabButton
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCloseTab(tab.id);
-              }}
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeTabId;
+          return (
+            <TabContainer
+              key={tab.id}
+              $active={isActive}
+              onMouseUp={() => onSelectTab(tab.id)}
             >
-              x
-            </CloseTabButton>
-          </div>
-        ))}
+              <TabTitle $active={isActive}>{tab.title}</TabTitle>
+              <CloseTabButton
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCloseTab(tab.id);
+                }}
+              >
+                x
+              </CloseTabButton>
+            </TabContainer>
+          );
+        })}
       </div>
       <NewTabButton onClick={onNewTab} type="button">
         +
