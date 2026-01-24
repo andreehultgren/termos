@@ -23,11 +23,18 @@ interface TabClosedPayload {
 let tabCounter = 0;
 
 export function App() {
-	const [tabs, setTabs] = useState<Tab[]>([
-		{ id: "tab-0", title: "Terminal 1" },
-	]);
-	const [activeTabId, setActiveTabId] = useState<string>("tab-0");
+	const [tabs, setTabs] = useState<Tab[]>([]);
+	const [activeTabId, setActiveTabId] = useState<string>("");
 	const terminalRefs = useRef<Map<string, TerminalHandle>>(new Map());
+	const initializedRef = useRef(false);
+
+	// Create initial tab on mount
+	useEffect(() => {
+		if (!initializedRef.current) {
+			initializedRef.current = true;
+			handleNewTab();
+		}
+	}, []);
 
 	// Listen for terminal data from Rust
 	useEffect(() => {

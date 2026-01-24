@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -27,7 +27,9 @@ struct TabClosed {
 }
 
 struct TabPty {
-    writer: Box<dyn Write + Send>,
+    writer: Arc<Mutex<Box<dyn Write + Send>>>,
+    _master: Box<dyn MasterPty + Send>,  // Keep master alive
+    _child: Box<dyn std::any::Any + Send>,  // Keep child process alive
 }
 
 struct TabsState {
@@ -46,25 +48,45 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
         })
         .map_err(|e| e.to_string())?;
 
-    // Spawn shell as login shell to inherit user's PATH
-    let mut cmd = CommandBuilder::new("zsh");
-    cmd.arg("-l");
-    cmd.env("TERM", "xterm-256color");
-    pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+    // Get user's home directory for working directory
+    let home_dir = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_else(|_| ".".to_string());
 
+    // Spawn shell as login shell to inherit user's PATH
+    let mut cmd = if cfg!(windows) {
+        // Use cmd.exe for now - more reliable than PowerShell in PTY
+        let mut cmd = CommandBuilder::new("cmd.exe");
+        cmd.cwd(&home_dir);
+        cmd
+    } else {
+        let mut cmd = CommandBuilder::new("zsh");
+        cmd.arg("-l");
+        cmd
+    };
+    cmd.env("TERM", "xterm-256color");
+
+    let child = pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+
+    // Get writer and reader before storing
     let writer = pair.master.take_writer().map_err(|e| e.to_string())?;
     let mut reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
 
-    // Store the writer
+    // Store writer, master, and child process - all must stay alive!
     {
         let mut tabs_guard = tabs.lock().map_err(|e| e.to_string())?;
-        tabs_guard.insert(tab_id.clone(), TabPty { writer });
+        tabs_guard.insert(tab_id.clone(), TabPty {
+            writer: Arc::new(Mutex::new(writer)),
+            _master: pair.master,
+            _child: Box::new(child),
+        });
     }
 
     // Read from PTY and send to frontend with tab_id
     let tab_id_clone = tab_id.clone();
     let tabs_clone = tabs.clone();
     std::thread::spawn(move || {
+
         let mut buf = [0u8; 8192];
         loop {
             match reader.read(&mut buf) {
@@ -80,7 +102,9 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
                         )
                         .ok();
                 }
-                Ok(_) => break,
+                Ok(_) => {
+                    break;
+                }
                 Err(e) => {
                     eprintln!("PTY read error for tab {}: {}", tab_id_clone, e);
                     break;
@@ -119,12 +143,15 @@ fn close_tab(tab_id: String, state: State<TabsState>) -> Result<(), String> {
 
 #[tauri::command]
 fn send_to_tab(tab_id: String, data: String, state: State<TabsState>) -> Result<(), String> {
-    let mut tabs = state.tabs.lock().map_err(|e| e.to_string())?;
-    if let Some(tab) = tabs.get_mut(&tab_id) {
-        tab.writer
+    println!("Sending to tab {}: {:?}", tab_id, data);
+    let tabs = state.tabs.lock().map_err(|e| e.to_string())?;
+    if let Some(tab) = tabs.get(&tab_id) {
+        let mut writer = tab.writer.lock().map_err(|e| e.to_string())?;
+        writer
             .write_all(data.as_bytes())
             .map_err(|e| e.to_string())?;
-        tab.writer.flush().map_err(|e| e.to_string())?;
+        writer.flush().map_err(|e| e.to_string())?;
+        println!("Successfully sent data to tab {}", tab_id);
         Ok(())
     } else {
         Err(format!("Tab {} not found", tab_id))
@@ -150,16 +177,10 @@ fn save_buttons(buttons: String) -> Result<(), String> {
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            let window = app.get_window("main").unwrap();
-            let tabs: Arc<Mutex<HashMap<String, TabPty>>> = Arc::new(Mutex::new(HashMap::new()));
-
             app.manage(TabsState {
-                tabs: tabs.clone(),
+                tabs: Arc::new(Mutex::new(HashMap::new())),
                 next_tab_num: Arc::new(Mutex::new(1)),
             });
-
-            // Create initial tab
-            spawn_tab("tab-0".to_string(), window, tabs).expect("Failed to create initial tab");
 
             Ok(())
         })
