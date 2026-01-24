@@ -143,13 +143,6 @@ body {
 	border-color: #007acc;
 }
 
-.modal-actions {
-	display: flex;
-	gap: 0.5rem;
-	justify-content: flex-end;
-	margin-top: 1.5rem;
-}
-
 .btn-primary,
 .btn-secondary {
 	padding: 0.6rem 1.2rem;

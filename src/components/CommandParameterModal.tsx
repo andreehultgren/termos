@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
 import FormGroup from "./FormGroup";
+import ModalActions from "./ModalActions";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -78,14 +79,14 @@ export function CommandParameterModal({
 						/>
 					</FormGroup>
 				))}
-				<div className="modal-actions">
+				<ModalActions>
 					<button className="btn-primary" onClick={handleSubmit} type="button">
 						Run
 					</button>
 					<button className="btn-secondary" onClick={onClose} type="button">
 						Cancel
 					</button>
-				</div>
+				</ModalActions>
 			</ModalContainer>
 		</ModalOverlay>
 	);

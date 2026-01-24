@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
 import FormGroup from "./FormGroup";
+import ModalActions from "./ModalActions";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -81,14 +82,14 @@ export function Modal({
 						If you want parameters, add {"{{variable_name}}"} to the command.
 					</p>
 				</FormGroup>
-				<div className="modal-actions">
+				<ModalActions>
 					<button className="btn-primary" onClick={handleSave} type="button">
 						Save
 					</button>
 					<button className="btn-secondary" onClick={onClose} type="button">
 						Cancel
 					</button>
-				</div>
+				</ModalActions>
 			</ModalContainer>
 		</ModalOverlay>
 	);
