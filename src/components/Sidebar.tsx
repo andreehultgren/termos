@@ -26,6 +26,22 @@ const CommandButton = styled.button`
   }
 `;
 
+const AddButton = styled.button`
+  background: #007acc;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+
+
+  &:hover {
+    background: #005a9e;
+  }
+`;
+
 interface CommandButton {
 	id: string;
 	name: string;
@@ -144,9 +160,9 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 			<div id="sidebar">
 				<div id="sidebar-header">
 					<h2>Commands</h2>
-					<button className="add-button" onClick={handleAddClick} type="button">
+					<AddButton onClick={handleAddClick} type="button">
 						+ Add
-					</button>
+					</AddButton>
 				</div>
 				<div id="button-list">
 					{buttons.map((btn) => (
