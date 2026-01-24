@@ -1,15 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import styled from "styled-components";
+import { TerminalInstance } from "../components";
 import { Terminal as XTerm } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
-
-const TerminalInstance = styled.div<{ $visible: boolean }>`
-  width: 100%;
-  height: 100%;
-  padding: 0.5rem;
-  display: ${(props) => (props.$visible ? "block" : "none")};
-`;
 
 export interface TerminalHandle {
 	write: (data: string) => void;

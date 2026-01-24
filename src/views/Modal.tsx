@@ -1,18 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
-import ModalOverlay from "./ModalOverlay";
-import ModalContainer from "./ModalContainer";
-import FormGroup from "./FormGroup";
-import ModalActions from "./ModalActions";
-import Button from "./Button";
-import FormLabel from "./FormLabel";
-import FormInput from "./FormInput";
-
-const InfoText = styled.p`
-	color: #888;
-	font-size: 0.85rem;
-	margin-top: 0.5rem;
-`;
+import {
+	InfoText,
+	ModalOverlay,
+	ModalContainer,
+	FormGroup,
+	ModalActions,
+	Button,
+	FormLabel,
+	FormInput,
+} from "../components";
 
 interface ModalProps {
 	isOpen: boolean;

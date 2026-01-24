@@ -1,29 +1,18 @@
 import { useState, useCallback } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import styled from "styled-components";
-import { Modal } from "./Modal";
-import { ContextMenu } from "./ContextMenu";
-import { CommandParameterModal } from "./CommandParameterModal";
+import { Button } from "../components";
+import { Modal, ContextMenu, CommandParameterModal } from "../views";
 import {
 	parseTemplateVariables,
 	replaceTemplateVariables,
 } from "../utils/commandTemplate";
 
-const CommandButton = styled.button`
+const CommandButton = styled(Button)`
 	width: 100%;
 	padding: 0.6rem 0.8rem;
 	margin-bottom: 0.4rem;
-	background: #3d3d3d;
-	color: #fff;
-	border: none;
-	border-radius: 4px;
 	text-align: left;
-	cursor: pointer;
-	transition: background 0.2s;
-	font-size: 0.9rem;
-  &:hover{
-    background: #4d4d4d;
-  }
 `;
 
 const ButtonList = styled.div`
@@ -198,6 +187,7 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 					{buttons.map((btn) => (
 						<CommandButton
 							key={btn.id}
+							variant="command"
 							onClick={() => handleCommandClick(btn)}
 							onContextMenu={(e) => handleContextMenu(e, btn.id)}
 							type="button"

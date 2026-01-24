@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import ModalOverlay from "./ModalOverlay";
-import ModalContainer from "./ModalContainer";
-import FormGroup from "./FormGroup";
-import ModalActions from "./ModalActions";
-import Button from "./Button";
-import FormLabel from "./FormLabel";
-import FormInput from "./FormInput";
+import {
+	ModalOverlay,
+	ModalContainer,
+	FormGroup,
+	ModalActions,
+	Button,
+	FormLabel,
+	FormInput,
+} from "../components";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
