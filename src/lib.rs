@@ -1,7 +1,23 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::error::Error;
+use thiserror::Error;
 use uuid::Uuid;
+
+/// Application-level errors
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("Button not found: {0}")]
+    ButtonNotFound(String),
+
+    #[error("Tab not found: {0}")]
+    TabNotFound(String),
+
+    #[error("Cannot close the last tab")]
+    CannotCloseLastTab,
+
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+}
 
 /// Represents a command button in the sidebar
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -42,21 +58,22 @@ impl ButtonManager {
     }
 
     /// Loads buttons from JSON string (simulating localStorage)
-    pub fn from_json(json: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn from_json(json: &str) -> Result<Self, AppError> {
         let buttons: Vec<CommandButton> = serde_json::from_str(json)?;
         Ok(Self { buttons })
     }
 
     /// Serializes buttons to JSON string (for localStorage)
-    pub fn to_json(&self) -> Result<String, Box<dyn Error>> {
+    pub fn to_json(&self) -> Result<String, AppError> {
         Ok(serde_json::to_string(&self.buttons)?)
     }
 
-    /// Adds a new button
-    pub fn add_button(&mut self, name: String, command: String) -> &CommandButton {
+    /// Adds a new button and returns its ID
+    pub fn add_button(&mut self, name: String, command: String) -> String {
         let button = CommandButton::new(name, command);
+        let id = button.id.clone();
         self.buttons.push(button);
-        self.buttons.last().unwrap()
+        id
     }
 
     /// Updates an existing button
@@ -65,24 +82,24 @@ impl ButtonManager {
         id: &str,
         name: String,
         command: String,
-    ) -> Result<(), String> {
+    ) -> Result<(), AppError> {
         if let Some(button) = self.buttons.iter_mut().find(|b| b.id == id) {
             button.name = name;
             button.command = command;
             Ok(())
         } else {
-            Err(format!("Button with id {} not found", id))
+            Err(AppError::ButtonNotFound(id.to_owned()))
         }
     }
 
     /// Deletes a button by ID
-    pub fn delete_button(&mut self, id: &str) -> Result<(), String> {
+    pub fn delete_button(&mut self, id: &str) -> Result<(), AppError> {
         let initial_len = self.buttons.len();
         self.buttons.retain(|b| b.id != id);
         if self.buttons.len() < initial_len {
             Ok(())
         } else {
-            Err(format!("Button with id {} not found", id))
+            Err(AppError::ButtonNotFound(id.to_owned()))
         }
     }
 
@@ -156,12 +173,12 @@ impl AppState {
     }
 
     /// Saves the state to JSON
-    pub fn to_json(&self) -> Result<String, Box<dyn Error>> {
+    pub fn to_json(&self) -> Result<String, AppError> {
         Ok(serde_json::to_string(self)?)
     }
 
     /// Loads the state from JSON
-    pub fn from_json(json: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn from_json(json: &str) -> Result<Self, AppError> {
         Ok(serde_json::from_str(json)?)
     }
 }
@@ -205,13 +222,13 @@ impl TabManager {
     }
 
     /// Closes a tab by ID. Returns error if tab doesn't exist or is the last tab.
-    pub fn close_tab(&mut self, tab_id: &str) -> Result<(), String> {
+    pub fn close_tab(&mut self, tab_id: &str) -> Result<(), AppError> {
         if !self.active_tabs.contains(tab_id) {
-            return Err(format!("Tab {} not found", tab_id));
+            return Err(AppError::TabNotFound(tab_id.to_owned()));
         }
 
         if self.active_tabs.len() <= 1 {
-            return Err("Cannot close the last tab".to_string());
+            return Err(AppError::CannotCloseLastTab);
         }
 
         self.active_tabs.remove(tab_id);
@@ -225,9 +242,9 @@ impl TabManager {
     }
 
     /// Switches to a tab by ID
-    pub fn switch_to_tab(&mut self, tab_id: &str) -> Result<(), String> {
+    pub fn switch_to_tab(&mut self, tab_id: &str) -> Result<(), AppError> {
         if !self.active_tabs.contains(tab_id) {
-            return Err(format!("Tab {} not found", tab_id));
+            return Err(AppError::TabNotFound(tab_id.to_owned()));
         }
         self.active_tab_id = Some(tab_id.to_string());
         Ok(())
@@ -289,14 +306,13 @@ mod tests {
     #[test]
     fn test_button_manager_update() {
         let mut manager = ButtonManager::new();
-        let button = manager.add_button("Test".to_string(), "echo test".to_string());
-        let id = button.id.clone();
+        let id = manager.add_button("Test".to_string(), "echo test".to_string());
 
         manager
             .update_button(&id, "Updated".to_string(), "echo updated".to_string())
-            .unwrap();
+            .expect("button should exist");
 
-        let updated = manager.get_button(&id).unwrap();
+        let updated = manager.get_button(&id).expect("button should exist");
         assert_eq!(updated.name, "Updated");
         assert_eq!(updated.command, "echo updated");
     }
@@ -304,10 +320,9 @@ mod tests {
     #[test]
     fn test_button_manager_delete() {
         let mut manager = ButtonManager::new();
-        let button = manager.add_button("Test".to_string(), "echo test".to_string());
-        let id = button.id.clone();
+        let id = manager.add_button("Test".to_string(), "echo test".to_string());
 
-        manager.delete_button(&id).unwrap();
+        manager.delete_button(&id).expect("button should exist");
         assert_eq!(manager.count(), 0);
     }
 
@@ -390,8 +405,7 @@ mod tests {
         manager.create_tab(); // tab-0
 
         let result = manager.close_tab("tab-0");
-        assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Cannot close the last tab");
+        assert!(matches!(result, Err(AppError::CannotCloseLastTab)));
         assert_eq!(manager.tab_count(), 1);
     }
 
@@ -402,8 +416,7 @@ mod tests {
         manager.create_tab();
 
         let result = manager.close_tab("tab-999");
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("not found"));
+        assert!(matches!(result, Err(AppError::TabNotFound(_))));
     }
 
     #[test]
