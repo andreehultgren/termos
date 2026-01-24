@@ -52,3 +52,9 @@ Thumbs.db
 .cache/
 tmp/
 temp/
+
+# AI files
+CLAUDE.md
+GPT-4.md
+AGENTS.md
+CURSOR.md
