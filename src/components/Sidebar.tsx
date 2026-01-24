@@ -26,6 +26,13 @@ const CommandButton = styled.button`
   }
 `;
 
+const ButtonList = styled.div`
+	flex: 1;
+	overflow-y: auto;
+	padding: 0.5rem;
+
+`;
+
 const AddButton = styled.button`
   background: #007acc;
   color: white;
@@ -187,7 +194,7 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 						+ Add
 					</AddButton>
 				</SidebarHeader>
-				<div id="button-list">
+				<ButtonList>
 					{buttons.map((btn) => (
 						<CommandButton
 							key={btn.id}
@@ -198,7 +205,7 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 							{btn.name}
 						</CommandButton>
 					))}
-				</div>
+				</ButtonList>
 			</StyledSidebar>
 
 			<Modal

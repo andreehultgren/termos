@@ -17,12 +17,6 @@ body {
 	width: 100vw;
 }
 
-#button-list {
-	flex: 1;
-	overflow-y: auto;
-	padding: 0.5rem;
-}
-
 /* Divider */
 #divider {
 	width: 4px;
