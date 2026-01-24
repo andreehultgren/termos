@@ -35,16 +35,6 @@ body {
 	background: #007acc;
 }
 
-/* Terminal */
-#terminal-container {
-	flex: 1;
-	background: #1e1e1e;
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-}
-
 /* Tab Bar */
 #tab-bar {
 	display: flex;
@@ -63,13 +53,6 @@ body {
 
 #tabs::-webkit-scrollbar {
 	height: 4px;
-}
-
-/* Terminals Container */
-#terminals {
-	flex: 1;
-	position: relative;
-	overflow: hidden;
 }
 
 /* Scrollbar */

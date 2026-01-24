@@ -5,6 +5,22 @@ import { Sidebar } from "./components/Sidebar";
 import { TabBar } from "./components/TabBar";
 import { Terminal, type TerminalHandle } from "./components/Terminal";
 import { Divider } from "./components/Divider";
+import styled from "styled-components";
+
+const Terminals = styled.div`
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+`;
+
+const TerminalContainer = styled.div`
+	flex: 1;
+	background: #1e1e1e;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+`;
 
 interface Tab {
 	id: string;
@@ -177,7 +193,7 @@ export function App() {
 		<div id="app">
 			<Sidebar onRunCommand={handleRunCommand} />
 			<Divider onResize={fitAllTerminals} />
-			<div id="terminal-container">
+			<TerminalContainer>
 				<TabBar
 					tabs={tabs}
 					activeTabId={activeTabId}
@@ -185,7 +201,7 @@ export function App() {
 					onCloseTab={handleCloseTab}
 					onNewTab={handleNewTab}
 				/>
-				<div id="terminals">
+				<Terminals>
 					{tabs.map((tab) => (
 						<Terminal
 							key={tab.id}
@@ -194,8 +210,8 @@ export function App() {
 							visible={tab.id === activeTabId}
 						/>
 					))}
-				</div>
-			</div>
+				</Terminals>
+			</TerminalContainer>
 		</div>
 	);
 }
