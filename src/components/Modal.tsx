@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
+import FormGroup from "./FormGroup";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -52,7 +53,7 @@ export function Modal({
 		<ModalOverlay onMouseUp={handleOverlayClick}>
 			<ModalContainer>
 				<h3>{title}</h3>
-				<div className="form-group">
+				<FormGroup>
 					<p>Name:</p>
 					<input
 						ref={nameInputRef}
@@ -64,8 +65,8 @@ export function Modal({
 							e.key === "Enter" && document.getElementById("cmd-input")?.focus()
 						}
 					/>
-				</div>
-				<div className="form-group">
+				</FormGroup>
+				<FormGroup>
 					<p>Command:</p>
 
 					<input
@@ -79,7 +80,7 @@ export function Modal({
 					<p className="info-text">
 						If you want parameters, add {"{{variable_name}}"} to the command.
 					</p>
-				</div>
+				</FormGroup>
 				<div className="modal-actions">
 					<button className="btn-primary" onClick={handleSave} type="button">
 						Save

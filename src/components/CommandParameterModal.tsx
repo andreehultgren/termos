@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
+import FormGroup from "./FormGroup";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -64,7 +65,7 @@ export function CommandParameterModal({
 				<h3>Run: {commandName}</h3>
 				<p className="modal-subtitle">Enter values for the parameters:</p>
 				{variables.map((varName, index) => (
-					<div className="form-group" key={varName}>
+					<FormGroup key={varName}>
 						<label htmlFor={`param-input-${index}`}>{varName}</label>
 						<input
 							id={`param-input-${index}`}
@@ -75,7 +76,7 @@ export function CommandParameterModal({
 							onKeyDown={(e) => handleKeyDown(e, index)}
 							placeholder={`Enter ${varName}`}
 						/>
-					</div>
+					</FormGroup>
 				))}
 				<div className="modal-actions">
 					<button className="btn-primary" onClick={handleSubmit} type="button">
