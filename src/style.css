@@ -17,18 +17,6 @@ body {
 	width: 100vw;
 }
 
-/* Divider */
-#divider {
-	width: 4px;
-	background: #3d3d3d;
-	cursor: col-resize;
-	transition: background 0.2s;
-}
-
-#divider:hover {
-	background: #007acc;
-}
-
 /* Tab Bar */
 #tab-bar {
 	display: flex;
