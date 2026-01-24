@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
+import ModalContainer from "./ModalContainer";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -59,7 +60,7 @@ export function CommandParameterModal({
 
 	return (
 		<ModalOverlay onMouseUp={handleOverlayClick}>
-			<div className="modal">
+			<ModalContainer>
 				<h3>Run: {commandName}</h3>
 				<p className="modal-subtitle">Enter values for the parameters:</p>
 				{variables.map((varName, index) => (
@@ -84,7 +85,7 @@ export function CommandParameterModal({
 						Cancel
 					</button>
 				</div>
-			</div>
+			</ModalContainer>
 		</ModalOverlay>
 	);
 }

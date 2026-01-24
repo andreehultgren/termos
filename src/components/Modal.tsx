@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import ModalOverlay from "./ModalOverlay";
+import ModalContainer from "./ModalContainer";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -49,7 +50,7 @@ export function Modal({
 
 	return (
 		<ModalOverlay onMouseUp={handleOverlayClick}>
-			<div className="modal">
+			<ModalContainer>
 				<h3>{title}</h3>
 				<div className="form-group">
 					<p>Name:</p>
@@ -87,7 +88,7 @@ export function Modal({
 						Cancel
 					</button>
 				</div>
-			</div>
+			</ModalContainer>
 		</ModalOverlay>
 	);
 }
