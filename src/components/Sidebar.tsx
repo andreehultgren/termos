@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import styled from "styled-components";
 import { Modal } from "./Modal";
 import { ContextMenu } from "./ContextMenu";
 import { CommandParameterModal } from "./CommandParameterModal";
@@ -7,6 +8,23 @@ import {
 	parseTemplateVariables,
 	replaceTemplateVariables,
 } from "../utils/commandTemplate";
+
+const CommandButton = styled.button`
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	margin-bottom: 0.4rem;
+	background: #3d3d3d;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	text-align: left;
+	cursor: pointer;
+	transition: background 0.2s;
+	font-size: 0.9rem;
+  &:hover{
+    background: #4d4d4d;
+  }
+`;
 
 interface CommandButton {
 	id: string;
@@ -132,15 +150,14 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 				</div>
 				<div id="button-list">
 					{buttons.map((btn) => (
-						<button
+						<CommandButton
 							key={btn.id}
-							className="command-btn"
 							onClick={() => handleCommandClick(btn)}
 							onContextMenu={(e) => handleContextMenu(e, btn.id)}
 							type="button"
 						>
 							{btn.name}
-						</button>
+						</CommandButton>
 					))}
 				</div>
 			</div>
