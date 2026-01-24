@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ModalOverlay from "./ModalOverlay";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -57,11 +58,7 @@ export function CommandParameterModal({
 	if (!isOpen) return null;
 
 	return (
-		<div
-			className="modal-overlay"
-			style={{ display: "flex" }}
-			onMouseUp={handleOverlayClick}
-		>
+		<ModalOverlay onMouseUp={handleOverlayClick}>
 			<div className="modal">
 				<h3>Run: {commandName}</h3>
 				<p className="modal-subtitle">Enter values for the parameters:</p>
@@ -88,6 +85,6 @@ export function CommandParameterModal({
 					</button>
 				</div>
 			</div>
-		</div>
+		</ModalOverlay>
 	);
 }

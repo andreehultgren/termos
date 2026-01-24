@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ModalOverlay from "./ModalOverlay";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -47,11 +48,7 @@ export function Modal({
 	if (!isOpen) return null;
 
 	return (
-		<div
-			className="modal-overlay"
-			style={{ display: "flex" }}
-			onMouseUp={handleOverlayClick}
-		>
+		<ModalOverlay onMouseUp={handleOverlayClick}>
 			<div className="modal">
 				<h3>{title}</h3>
 				<div className="form-group">
@@ -91,6 +88,6 @@ export function Modal({
 					</button>
 				</div>
 			</div>
-		</div>
+		</ModalOverlay>
 	);
 }
