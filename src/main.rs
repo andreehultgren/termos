@@ -5,8 +5,43 @@ use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 use tauri::{Manager, State, Window};
+use thiserror::Error;
+
+/// PTY-related errors
+#[derive(Debug, Error)]
+enum PtyError {
+    #[error("Failed to open PTY: {0}")]
+    Open(#[source] Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("Failed to spawn command: {0}")]
+    Spawn(#[source] Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("Failed to get PTY writer: {0}")]
+    Writer(#[source] Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("Failed to get PTY reader: {0}")]
+    Reader(#[source] Box<dyn std::error::Error + Send + Sync>),
+
+    #[error("Lock poisoned")]
+    LockPoisoned,
+
+    #[error("Tab not found: {0}")]
+    TabNotFound(String),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+}
+
+impl<T> From<PoisonError<T>> for PtyError {
+    fn from(_: PoisonError<T>) -> Self {
+        PtyError::LockPoisoned
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Button {
@@ -37,7 +72,7 @@ struct TabsState {
     next_tab_num: Arc<Mutex<u32>>,
 }
 
-fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, TabPty>>>) -> Result<(), String> {
+fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, TabPty>>>) -> Result<(), PtyError> {
     let pty_system = native_pty_system();
     let pair = pty_system
         .openpty(PtySize {
@@ -46,7 +81,7 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
             pixel_width: 0,
             pixel_height: 0,
         })
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| PtyError::Open(e.into()))?;
 
     // Get user's home directory for working directory
     let home_dir = std::env::var("USERPROFILE")
@@ -66,15 +101,15 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
     };
     cmd.env("TERM", "xterm-256color");
 
-    let child = pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+    let child = pair.slave.spawn_command(cmd).map_err(|e| PtyError::Spawn(e.into()))?;
 
     // Get writer and reader before storing
-    let writer = pair.master.take_writer().map_err(|e| e.to_string())?;
-    let mut reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
+    let writer = pair.master.take_writer().map_err(|e| PtyError::Writer(e.into()))?;
+    let mut reader = pair.master.try_clone_reader().map_err(|e| PtyError::Reader(e.into()))?;
 
     // Store writer, master, and child process - all must stay alive!
     {
-        let mut tabs_guard = tabs.lock().map_err(|e| e.to_string())?;
+        let mut tabs_guard = tabs.lock()?;
         tabs_guard.insert(tab_id.clone(), TabPty {
             writer: Arc::new(Mutex::new(writer)),
             _master: pair.master,
@@ -123,8 +158,12 @@ fn spawn_tab(tab_id: String, window: Window, tabs: Arc<Mutex<HashMap<String, Tab
 
 #[tauri::command]
 fn create_tab(window: Window, state: State<TabsState>) -> Result<String, String> {
+    create_tab_inner(window, state).map_err(|e| e.to_string())
+}
+
+fn create_tab_inner(window: Window, state: State<TabsState>) -> Result<String, PtyError> {
     let tab_id = {
-        let mut num = state.next_tab_num.lock().map_err(|e| e.to_string())?;
+        let mut num = state.next_tab_num.lock()?;
         let id = format!("tab-{}", *num);
         *num += 1;
         id
@@ -136,24 +175,27 @@ fn create_tab(window: Window, state: State<TabsState>) -> Result<String, String>
 
 #[tauri::command]
 fn close_tab(tab_id: String, state: State<TabsState>) -> Result<(), String> {
-    let mut tabs = state.tabs.lock().map_err(|e| e.to_string())?;
+    close_tab_inner(tab_id, state).map_err(|e| e.to_string())
+}
+
+fn close_tab_inner(tab_id: String, state: State<TabsState>) -> Result<(), PtyError> {
+    let mut tabs = state.tabs.lock()?;
     tabs.remove(&tab_id);
     Ok(())
 }
 
 #[tauri::command]
 fn send_to_tab(tab_id: String, data: String, state: State<TabsState>) -> Result<(), String> {
-    let tabs = state.tabs.lock().map_err(|e| e.to_string())?;
-    if let Some(tab) = tabs.get(&tab_id) {
-        let mut writer = tab.writer.lock().map_err(|e| e.to_string())?;
-        writer
-            .write_all(data.as_bytes())
-            .map_err(|e| e.to_string())?;
-        writer.flush().map_err(|e| e.to_string())?;
-        Ok(())
-    } else {
-        Err(format!("Tab {} not found", tab_id))
-    }
+    send_to_tab_inner(tab_id, data, state).map_err(|e| e.to_string())
+}
+
+fn send_to_tab_inner(tab_id: String, data: String, state: State<TabsState>) -> Result<(), PtyError> {
+    let tabs = state.tabs.lock()?;
+    let tab = tabs.get(&tab_id).ok_or_else(|| PtyError::TabNotFound(tab_id))?;
+    let mut writer = tab.writer.lock()?;
+    writer.write_all(data.as_bytes())?;
+    writer.flush()?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -168,7 +210,11 @@ fn load_buttons() -> Result<String, String> {
 
 #[tauri::command]
 fn save_buttons(buttons: String) -> Result<(), String> {
-    serde_json::from_str::<Vec<Button>>(&buttons).map_err(|e| e.to_string())?;
+    save_buttons_inner(buttons).map_err(|e| e.to_string())
+}
+
+fn save_buttons_inner(buttons: String) -> Result<(), PtyError> {
+    serde_json::from_str::<Vec<Button>>(&buttons)?;
     Ok(())
 }
 
