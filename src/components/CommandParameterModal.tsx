@@ -3,6 +3,9 @@ import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
 import FormGroup from "./FormGroup";
 import ModalActions from "./ModalActions";
+import Button from "./Button";
+import FormLabel from "./FormLabel";
+import FormInput from "./FormInput";
 
 interface CommandParameterModalProps {
 	isOpen: boolean;
@@ -67,8 +70,8 @@ export function CommandParameterModal({
 				<p className="modal-subtitle">Enter values for the parameters:</p>
 				{variables.map((varName, index) => (
 					<FormGroup key={varName}>
-						<label htmlFor={`param-input-${index}`}>{varName}</label>
-						<input
+						<FormLabel htmlFor={`param-input-${index}`}>{varName}</FormLabel>
+						<FormInput
 							id={`param-input-${index}`}
 							ref={index === 0 ? firstInputRef : undefined}
 							type="text"
@@ -80,12 +83,12 @@ export function CommandParameterModal({
 					</FormGroup>
 				))}
 				<ModalActions>
-					<button className="btn-primary" onClick={handleSubmit} type="button">
+					<Button variant="primary" onClick={handleSubmit} type="button">
 						Run
-					</button>
-					<button className="btn-secondary" onClick={onClose} type="button">
+					</Button>
+					<Button variant="secondary" onClick={onClose} type="button">
 						Cancel
-					</button>
+					</Button>
 				</ModalActions>
 			</ModalContainer>
 		</ModalOverlay>

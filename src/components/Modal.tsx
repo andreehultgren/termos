@@ -3,6 +3,9 @@ import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
 import FormGroup from "./FormGroup";
 import ModalActions from "./ModalActions";
+import Button from "./Button";
+import FormLabel from "./FormLabel";
+import FormInput from "./FormInput";
 
 interface ModalProps {
 	isOpen: boolean;
@@ -55,9 +58,10 @@ export function Modal({
 			<ModalContainer>
 				<h3>{title}</h3>
 				<FormGroup>
-					<p>Name:</p>
-					<input
+					<FormLabel htmlFor="name-input">Name:</FormLabel>
+					<FormInput
 						ref={nameInputRef}
+						id="name-input"
 						type="text"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
@@ -68,9 +72,9 @@ export function Modal({
 					/>
 				</FormGroup>
 				<FormGroup>
-					<p>Command:</p>
+					<FormLabel htmlFor="cmd-input">Command:</FormLabel>
 
-					<input
+					<FormInput
 						id="cmd-input"
 						type="text"
 						value={command}
@@ -83,12 +87,12 @@ export function Modal({
 					</p>
 				</FormGroup>
 				<ModalActions>
-					<button className="btn-primary" onClick={handleSave} type="button">
+					<Button variant="primary" onClick={handleSave} type="button">
 						Save
-					</button>
-					<button className="btn-secondary" onClick={onClose} type="button">
+					</Button>
+					<Button variant="secondary" onClick={onClose} type="button">
 						Cancel
-					</button>
+					</Button>
 				</ModalActions>
 			</ModalContainer>
 		</ModalOverlay>
