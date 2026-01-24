@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import styled from "styled-components";
 import ModalOverlay from "./ModalOverlay";
 import ModalContainer from "./ModalContainer";
 import FormGroup from "./FormGroup";
@@ -6,6 +7,12 @@ import ModalActions from "./ModalActions";
 import Button from "./Button";
 import FormLabel from "./FormLabel";
 import FormInput from "./FormInput";
+
+const InfoText = styled.p`
+	color: #888;
+	font-size: 0.85rem;
+	margin-top: 0.5rem;
+`;
 
 interface ModalProps {
 	isOpen: boolean;
@@ -82,9 +89,9 @@ export function Modal({
 						placeholder="e.g., npm run build"
 						onKeyDown={(e) => e.key === "Enter" && handleSave()}
 					/>
-					<p className="info-text">
+					<InfoText>
 						If you want parameters, add {"{{variable_name}}"} to the command.
-					</p>
+					</InfoText>
 				</FormGroup>
 				<ModalActions>
 					<Button variant="primary" onClick={handleSave} type="button">
