@@ -2,6 +2,11 @@ import { useState, useCallback } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Modal } from "./Modal";
 import { ContextMenu } from "./ContextMenu";
+import { CommandParameterModal } from "./CommandParameterModal";
+import {
+	parseTemplateVariables,
+	replaceTemplateVariables,
+} from "../utils/commandTemplate";
 
 interface CommandButton {
 	id: string;
@@ -35,6 +40,11 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 		y: number;
 		buttonId: string;
 	} | null>(null);
+	const [paramModal, setParamModal] = useState<{
+		isOpen: boolean;
+		button: CommandButton | null;
+		variables: string[];
+	}>({ isOpen: false, button: null, variables: [] });
 
 	const handleAddClick = () => {
 		setEditingButton(null);
@@ -86,6 +96,31 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 		setContextMenu(null);
 	};
 
+	const handleCommandClick = (btn: CommandButton) => {
+		const variables = parseTemplateVariables(btn.command);
+
+		if (variables.length === 0) {
+			onRunCommand(`${btn.command}\n`);
+		} else {
+			setParamModal({ isOpen: true, button: btn, variables });
+		}
+	};
+
+	const handleParamSubmit = (values: Record<string, string>) => {
+		if (paramModal.button) {
+			const finalCommand = replaceTemplateVariables(
+				paramModal.button.command,
+				values,
+			);
+			onRunCommand(`${finalCommand}\n`);
+		}
+		setParamModal({ isOpen: false, button: null, variables: [] });
+	};
+
+	const handleParamClose = () => {
+		setParamModal({ isOpen: false, button: null, variables: [] });
+	};
+
 	return (
 		<>
 			<div id="sidebar">
@@ -100,7 +135,7 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 						<button
 							key={btn.id}
 							className="command-btn"
-							onClick={() => onRunCommand(`${btn.command}\n`)}
+							onClick={() => handleCommandClick(btn)}
 							onContextMenu={(e) => handleContextMenu(e, btn.id)}
 							type="button"
 						>
@@ -128,6 +163,14 @@ export function Sidebar({ onRunCommand }: SidebarProps) {
 					onClose={() => setContextMenu(null)}
 				/>
 			)}
+
+			<CommandParameterModal
+				isOpen={paramModal.isOpen}
+				commandName={paramModal.button?.name ?? ""}
+				variables={paramModal.variables}
+				onSubmit={handleParamSubmit}
+				onClose={handleParamClose}
+			/>
 		</>
 	);
 }

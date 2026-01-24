@@ -69,6 +69,7 @@ export function Modal({
 				</div>
 				<div className="form-group">
 					<p>Command:</p>
+
 					<input
 						id="cmd-input"
 						type="text"
@@ -77,6 +78,9 @@ export function Modal({
 						placeholder="e.g., npm run build"
 						onKeyDown={(e) => e.key === "Enter" && handleSave()}
 					/>
+					<p className="info-text">
+						If you want parameters, add {"{{variable_name}}"} to the command.
+					</p>
 				</div>
 				<div className="modal-actions">
 					<button className="btn-primary" onClick={handleSave} type="button">
